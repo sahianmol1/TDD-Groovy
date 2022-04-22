@@ -12,18 +12,19 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import petros.efthymiou.groovy.data.PlayList
 import petros.efthymiou.groovy.utils.BaseUnitTest
-import java.lang.RuntimeException
 
 @ExperimentalCoroutinesApi
 class PlayListRepositoryShould: BaseUnitTest() {
 
     private val service: PlayListService = mock()
     private val playLists: List<PlayList> = mock()
+    private val playListsRaw: List<PlayListRaw> = mock()
+    private val mapper: PlayListMapper = mock()
     private val exception = RuntimeException("Something went wrong")
 
     @Test
     fun getPlayListsFromService() = runTest{
-        val repository = PlayListRepository(service)
+        val repository = mockSuccessfulCase()
 
         repository.getPlayLists()
 
@@ -44,6 +45,14 @@ class PlayListRepositoryShould: BaseUnitTest() {
         assertEquals(exception, repository.getPlayLists().first().exceptionOrNull())
     }
 
+    @Test
+    fun delegateBusinessLogicToMapper() = runTest {
+        val repository = mockSuccessfulCase()
+
+        repository.getPlayLists().first()
+        verify(mapper, times(1)).invoke(playListsRaw)
+    }
+
     private suspend fun mockFailureCase(): PlayListRepository {
         whenever(service.fetchPlayLists()).thenReturn(
             flow {
@@ -51,16 +60,18 @@ class PlayListRepositoryShould: BaseUnitTest() {
             }
         )
 
-        return PlayListRepository(service)
+        whenever(mapper.invoke(playListsRaw)).thenReturn(playLists)
+
+        return PlayListRepository(service, mapper)
     }
 
     private suspend fun mockSuccessfulCase(): PlayListRepository {
         whenever(service.fetchPlayLists()).thenReturn(
             flow {
-                emit(Result.success(playLists))
+                emit(Result.success(playListsRaw))
             }
         )
-
-        return PlayListRepository(service)
+        whenever(mapper.invoke(playListsRaw)).thenReturn(playLists)
+        return PlayListRepository(service, mapper)
     }
 }

@@ -9,14 +9,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
-import petros.efthymiou.groovy.data.PlayList
-import java.lang.RuntimeException
 
 @ExperimentalCoroutinesApi
 class PlayListServiceShould {
 
     private val api: PlayListAPI = mock()
-    private val playLists: List<PlayList> = mock()
+    private val playLists: List<PlayListRaw> = mock()
 
     @Test
     fun fetchPlayListsFromAPI() = runTest {

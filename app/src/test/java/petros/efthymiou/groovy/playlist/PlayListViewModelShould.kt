@@ -11,9 +11,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import petros.efthymiou.groovy.data.PlayList
-import petros.efthymiou.groovy.playlist.PlayListRepository
-import petros.efthymiou.groovy.playlist.PlayListViewModel
 import petros.efthymiou.groovy.utils.BaseUnitTest
+import petros.efthymiou.groovy.utils.captureValues
 import petros.efthymiou.groovy.utils.getValueForTest
 
 @ExperimentalCoroutinesApi
@@ -42,15 +41,62 @@ class PlayListViewModelShould : BaseUnitTest() {
 
     @Test
     fun emitFailureWhenReceiveFailure() = runTest {
+        val viewModel = mockFailureCase()
+
+        assertEquals(exception, viewModel.playLists.getValueForTest()!!.exceptionOrNull())
+    }
+
+    @Test
+    fun showLoaderWhileFetchingTheDataFromRemote() {
+        val viewModel = mockSuccessfulCase()
+        viewModel.loader.captureValues {
+            viewModel.playLists.getValueForTest()
+
+            assertEquals(true, values[0])
+        }
+    }
+
+    @Test
+    fun closeLoaderAfterPlayListLoaded(){
+        val viewmodel = mockSuccessfulCase()
+
+        viewmodel.loader.captureValues {
+            viewmodel.playLists.getValueForTest()
+
+            assertEquals(false, values.last())
+        }
+    }
+
+    @Test
+    fun closeLoaderAfterError() = runTest {
+        val viewModel = mockFailureCase()
+
+        viewModel.loader.captureValues {
+            viewModel.playLists.getValueForTest()
+
+            assertEquals(false, values.last())
+        }
+    }
+
+    @Test
+    fun showLoaderBeforeError() = runTest {
+        val viewModel = mockFailureCase()
+
+        viewModel.loader.captureValues {
+            viewModel.playLists.getValueForTest()
+
+            assertEquals(true, values[0])
+        }
+    }
+
+    private suspend fun mockFailureCase(): PlayListViewModel {
         whenever(repository.getPlayLists()).thenReturn(
             flow {
                 emit(Result.failure(exception))
             }
         )
 
-        val viewModel = PlayListViewModel(repository)
-
-        assertEquals(exception, viewModel.playLists.getValueForTest()!!.exceptionOrNull())
+        return PlayListViewModel(repository)
     }
 
     private fun mockSuccessfulCase(): PlayListViewModel {

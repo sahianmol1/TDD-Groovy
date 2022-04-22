@@ -9,7 +9,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
-import petros.efthymiou.groovy.R
+import petros.efthymiou.groovy.databinding.FragmentItemListBinding
 import javax.inject.Inject
 
 /**
@@ -20,6 +20,8 @@ import javax.inject.Inject
 class PlaylistFragment : Fragment() {
 
     lateinit var viewModel: PlayListViewModel
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var binding: FragmentItemListBinding
 
     @Inject
     lateinit var viewModelFactory: PlayListViewModelFactory
@@ -32,26 +34,32 @@ class PlaylistFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        val view = inflater.inflate(R.layout.fragment_item_list, container, false)
+    ): View {
+        binding = FragmentItemListBinding.inflate(inflater, container, false)
+        val view = binding.root
+        recyclerView = binding.rvPlayList
 
         // Set the adapter
-        if (view is RecyclerView) {
-            with(view) {
-                layoutManager = LinearLayoutManager(context)
-                adapter = PlaylistRecyclerViewAdapter(listOf())
+        with(recyclerView) {
+            layoutManager = LinearLayoutManager(context)
+            adapter = PlaylistRecyclerViewAdapter(listOf())
+        }
+
+        viewModel.loader.observe(viewLifecycleOwner) { loading ->
+            when(loading) {
+                true -> binding.loader.visibility = View.VISIBLE
+                else -> binding.loader.visibility = View.GONE
             }
         }
 
         viewModel.playLists.observe(viewLifecycleOwner) { result ->
             if (result.getOrNull() != null) {
-                (view as RecyclerView).adapter = PlaylistRecyclerViewAdapter(result.getOrNull()!!)
+                recyclerView.adapter = PlaylistRecyclerViewAdapter(result.getOrNull()!!)
             } else {
                 //TODO
             }
         }
-
-
+        
         return view
     }
 
