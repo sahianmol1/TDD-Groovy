@@ -4,11 +4,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
+import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.BoundedMatcher
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.LargeTest
 import org.hamcrest.Description
 import org.hamcrest.Matcher
@@ -16,14 +16,13 @@ import org.hamcrest.TypeSafeMatcher
 import org.hamcrest.core.AllOf.allOf
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
 import petros.efthymiou.groovy.PlaylistsFeature.RecyclerViewMatchers.hasItemCount
 
-@RunWith(AndroidJUnit4::class)
 @LargeTest
-class PlaylistsFeature {
+class PlaylistsFeature : BaseUITest() {
 
-    @get:Rule val activityScenarioRule = ActivityScenarioRule(MainActivity::class.java)
+    @get:Rule
+    val activityScenarioRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Test
     fun displayScreenTitle() {
@@ -36,11 +35,21 @@ class PlaylistsFeature {
 
         onView(withId(R.id.rv_playList)).check(matches(hasItemCount(10)))
 
-        onView(allOf(withId(R.id.tv_title), isDescendantOfA(nthChildOf(withId(R.id.rv_playList), 0))))
+        onView(
+            allOf(
+                withId(R.id.tv_title),
+                isDescendantOfA(nthChildOf(withId(R.id.rv_playList), 0))
+            )
+        )
             .check(matches(withText("Hard Rock Cafe")))
             .check(matches(isDisplayed()))
 
-        onView(allOf(withId(R.id.tv_playlist_category), isDescendantOfA(nthChildOf(withId(R.id.rv_playList), 0))))
+        onView(
+            allOf(
+                withId(R.id.tv_playlist_category),
+                isDescendantOfA(nthChildOf(withId(R.id.rv_playList), 0))
+            )
+        )
             .check(matches(withText("rock")))
             .check(matches(isDisplayed()))
 
@@ -61,8 +70,22 @@ class PlaylistsFeature {
     }
 
     @Test
-    fun displayRockImageForRockTypePlayLists(){
+    fun displayRockImageForRockTypePlayLists() {
 
+    }
+
+    @Test
+    fun navigateToDetailScreen() {
+        Thread.sleep(4000)
+        onView(
+            allOf(
+                withId(R.id.img_playlist),
+                isDescendantOfA(nthChildOf(withId(R.id.rv_playList), 0))
+            )
+        )
+            .perform(click())
+
+        onView(withId(R.id.playlists_details_root)).check(matches(isDisplayed()))
     }
 
     fun nthChildOf(parentMatcher: Matcher<View>, childPosition: Int): Matcher<View> {
@@ -87,7 +110,8 @@ class PlaylistsFeature {
         @JvmStatic
         fun hasItemCount(itemCount: Int): Matcher<View> {
             return object : BoundedMatcher<View, RecyclerView>(
-                RecyclerView::class.java) {
+                RecyclerView::class.java
+            ) {
 
                 override fun describeTo(description: Description) {
                     description.appendText("has $itemCount items")

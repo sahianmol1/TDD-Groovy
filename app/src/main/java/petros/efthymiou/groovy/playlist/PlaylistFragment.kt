@@ -6,6 +6,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import dagger.hilt.android.AndroidEntryPoint
@@ -42,11 +44,17 @@ class PlaylistFragment : Fragment() {
         // Set the adapter
         with(recyclerView) {
             layoutManager = LinearLayoutManager(context)
-            adapter = PlaylistRecyclerViewAdapter(listOf())
+            adapter = PlaylistRecyclerViewAdapter(listOf()) { id ->
+                findNavController().navigate(
+                    PlaylistFragmentDirections.actionPlaylistFragmentToPlaylistDetailFragment(
+                        id
+                    )
+                )
+            }
         }
 
         viewModel.loader.observe(viewLifecycleOwner) { loading ->
-            when(loading) {
+            when (loading) {
                 true -> binding.loader.visibility = View.VISIBLE
                 else -> binding.loader.visibility = View.GONE
             }
@@ -54,12 +62,18 @@ class PlaylistFragment : Fragment() {
 
         viewModel.playLists.observe(viewLifecycleOwner) { result ->
             if (result.getOrNull() != null) {
-                recyclerView.adapter = PlaylistRecyclerViewAdapter(result.getOrNull()!!)
+                recyclerView.adapter = PlaylistRecyclerViewAdapter(result.getOrNull()!!) { id ->
+                    findNavController().navigate(
+                        PlaylistFragmentDirections.actionPlaylistFragmentToPlaylistDetailFragment(
+                            id
+                        )
+                    )
+                }
             } else {
                 //TODO
             }
         }
-        
+
         return view
     }
 
