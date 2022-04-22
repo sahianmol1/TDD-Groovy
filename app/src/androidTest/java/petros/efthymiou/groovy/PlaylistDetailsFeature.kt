@@ -4,8 +4,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions
-import androidx.test.espresso.matcher.ViewMatchers
-import androidx.test.espresso.matcher.ViewMatchers.withText
+import androidx.test.espresso.assertion.ViewAssertions.doesNotExist
+import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.Description
@@ -24,17 +25,52 @@ class PlaylistDetailsFeature {
 
     @Test
     fun displaysPlayListNameAndDetails() {
-        Thread.sleep(4000)
-        onView(
-            AllOf.allOf(
-                ViewMatchers.withId(R.id.img_playlist),
-                ViewMatchers.isDescendantOfA(nthChildOf(ViewMatchers.withId(R.id.rv_playList), 0))
-            )
-        ).perform(ViewActions.click())
+        navigateToDetailsFragment(0)
 
         onView(withText("Hard Rock Cafe"))
 
         onView(withText("Rock your senses with this timeless signature vibe list. \\n\\n • Poison \\n • You shook me all night \\n • Zombie \\n • Rock'n Me \\n • Thunderstruck \\n • I Hate Myself for Loving you \\n • Crazy \\n • Knockin' on Heavens Door"))
+    }
+
+    @Test
+    fun showALoadingIndicatorWhileFetchingTheDataFromAPI() {
+        navigateToDetailsFragment(0)
+
+        onView(withId(R.id.details_loader)).check(matches(isDisplayed()))
+    }
+
+    @Test
+    fun hidesTheLoadingIndicatorWhenTheDataIsFetchedCompletely() {
+        navigateToDetailsFragment(0)
+        Thread.sleep(4000)
+
+        onView(withId(R.id.details_loader)).check(matches(withEffectiveVisibility(Visibility.GONE)))
+
+    }
+
+    @Test
+    fun displayErrorMessageWhenNetworkFails() {
+        navigateToDetailsFragment(1)
+
+        onView(withText(R.string.generic_error)).check(matches(isDisplayed()))
+    }
+
+    @Test
+    fun hidesErrorMessagAfterSomeTime() {
+        navigateToDetailsFragment(1)
+
+        Thread.sleep(4000)
+        onView(withText(R.string.generic_error)).check(doesNotExist())
+    }
+
+    private fun navigateToDetailsFragment(childPosition: Int) {
+        Thread.sleep(4000)
+        onView(
+            AllOf.allOf(
+                withId(R.id.img_playlist),
+                isDescendantOfA(nthChildOf(withId(R.id.rv_playList), childPosition))
+            )
+        ).perform(ViewActions.click())
     }
 
     fun nthChildOf(parentMatcher: Matcher<View>, childPosition: Int): Matcher<View> {

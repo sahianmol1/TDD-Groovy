@@ -8,8 +8,10 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.navArgs
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import petros.efthymiou.groovy.R
 import petros.efthymiou.groovy.databinding.FragmentPlaylistDetailBinding
 import javax.inject.Inject
 
@@ -24,8 +26,6 @@ class PlaylistDetailFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         viewModel = ViewModelProvider(this, viewModelFactory)[PlaylistDetailsViewModel::class.java]
-//        val myArray: Array<Int> = arrayOf(1,2,3,4,5)
-//        myArray[2] = 5
     }
 
     override fun onCreateView(
@@ -41,12 +41,19 @@ class PlaylistDetailFragment : Fragment() {
             viewModel.getPlayListDetails(id)
         }
 
+        viewModel.loader.observe(viewLifecycleOwner){ isLoading ->
+            when(isLoading) {
+                true -> binding.detailsLoader.visibility = View.VISIBLE
+                else -> binding.detailsLoader.visibility = View.GONE
+            }
+        }
+
         viewModel.playListDetails.observe(viewLifecycleOwner) { playlistDetails ->
             if (playlistDetails.getOrNull() != null) {
                 binding.tvPlaylistName.text = playlistDetails.getOrNull()!!.name
                 binding.tvDetails.text = playlistDetails.getOrNull()!!.details
             } else {
-                // TODO
+                Snackbar.make(binding.root, R.string.generic_error, Snackbar.LENGTH_SHORT).show()
             }
 
         }

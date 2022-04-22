@@ -14,10 +14,11 @@ import petros.efthymiou.groovy.details.PlaylistDetails
 import petros.efthymiou.groovy.details.PlaylistDetailsService
 import petros.efthymiou.groovy.details.PlaylistDetailsViewModel
 import petros.efthymiou.groovy.utils.BaseUnitTest
+import petros.efthymiou.groovy.utils.captureValues
 import petros.efthymiou.groovy.utils.getValueForTest
 
 @ExperimentalCoroutinesApi
-class PlaylistViewModelShould: BaseUnitTest() {
+class PlaylistDetailsViewModelShould: BaseUnitTest() {
 
     private val service: PlaylistDetailsService = mock()
     private val id = "1"
@@ -49,6 +50,28 @@ class PlaylistViewModelShould: BaseUnitTest() {
         viewModel.getPlayListDetails(id)
 
         assertEquals(Result.failure<Result<PlaylistDetails>>(error), viewModel.playListDetails.getValueForTest())
+    }
+
+    @Test
+    fun makeLoaderVisibleWhenTheDetailsAreLoading() {
+        val viewModel = mockSuccessfulCase()
+
+        viewModel.loader.captureValues {
+            viewModel.getPlayListDetails(id)
+            viewModel.playListDetails.getValueForTest()
+            assertEquals(true, values[0])
+        }
+    }
+
+    @Test
+    fun hideLoaderWhenTheDetailsAreCompletelyFetched() {
+        val viewModel = mockSuccessfulCase()
+
+        viewModel.loader.captureValues {
+            viewModel.getPlayListDetails(id)
+            viewModel.playListDetails.getValueForTest()
+            assertEquals(false, values.last())
+        }
     }
 
     private suspend fun mockErrorCase(): PlaylistDetailsViewModel {
